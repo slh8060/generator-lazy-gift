@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<h1>gift</h1>
+<div class="detail"></div>
+
+
+<button class="insertOneBtn">插入一条详情</button>
+<button class="getInfoBtn">获取详情</button>
+
+
+<script src="libs/jquery/v1.12.4/jquery.min.js"></script>
+<script src="libs/jquery.base64/jquery.base64.js"></script>
+<script src="src/js/common.js"></script>
+
+<script>
+
+  $(function () {
+
+    $('.insertOneBtn').on('click', function () {
+      var items = [
+        {
+          "detail_level": 1,
+          "title": "烧烤工具",
+          "content": "qsqqqqqq"
+        },
+        {
+          "detail_level": 2,
+          "title": "烧烤食材",
+          "content": "啊啊啊啊啊啊"
+        },{
+          "detail_level": 3,
+          "title": "烧烤调味料",
+          "content": "等等等等等等"
+        }
+      ];
+
+      var p = {
+        "uname": "slh",
+        "title": "去烧烤要带什么",
+        "items": items
+      };
+      p = JSON.stringify(p);
+      $.ajax({
+        url: '/publish.json',
+        type: "post",
+        data:{
+          'p': p
+        },
+        success: function (results) {
+          console.log(results);
+        }
+      })
+    });
+
+    $('.getInfoBtn').on('click', function () {
+      var p = {
+        "start": 1,
+        "limit": 1
+      };
+      $.ajax({
+        url: "/detail.json",
+        type: "post",
+        data: {
+          "p": JSON.stringify(p)
+        },
+        success: function (results) {
+          console.log(results);
+          $('.detail').text(results);
+//           for(var i = 0; i < results.length; i ++){
+//             var item = "<p>" + results[i].title + "</p>";
+//             $('.detail').append(item);
+//           }
+        }
+      })
+    })
+  })
+</script>
+</body>
+</html>
