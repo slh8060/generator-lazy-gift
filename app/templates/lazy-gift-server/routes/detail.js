@@ -35,9 +35,7 @@ router.post('/recommend.json', function (req, res) {
   let firstTime;
 
   if (typeof param.firstTime != "undefined") {
-
     firstTime = param.firstTime;
-
   } else {
     firstTime = new Date();
   }
@@ -48,32 +46,41 @@ router.post('/recommend.json', function (req, res) {
       if (err) {
         results.success = false;
         results.message = err.message;
+        res.send(results);
       } else {
-        results.success = true;
-        results.firstTime = firstTime;
-        results.result = result;
 
-        var callback = new AsyncCallback(result.length,function () {
+        if (result.length == 0) {
+          results.cuccess = false;
+          results.message = "没有更多数据";
           res.send(results);
-          connection.release();
-        });
+        } else {
+          results.success = true;
+          results.firstTime = firstTime;
+          results.result = result;
 
-        for (let i = 0; i < result.length; i ++){
-          let items = [];
-          connection.query(detailSQL.selectDetailItem,result[i].id,function (err,result) {
-            if (result.length != 0) {
-              for (let j = 0; j < result.length; j ++){
-                let item = {};
-                item.detail_level = result[j].detail_level;
-                item.content = result[j].content;
-                items.push(item);
-              }
-              results.result[i].items = items;
-            } else {
-              results.result[i].items = [];
-            }
-            callback.exect();
+          var callback = new AsyncCallback(result.length,function () {
+            res.send(results);
+            connection.release();
           });
+
+          for (let i = 0; i < result.length; i ++){
+            let items = [];
+            connection.query(detailSQL.selectDetailItem,result[i].id,function (err,result) {
+              if (result.length != 0) {
+                for (let j = 0; j < result.length; j ++){
+                  let item = {};
+                  item.detail_level = result[j].detail_level;
+                  item.brief = result[j].brief;
+                  item.content = result[j].content;
+                  items.push(item);
+                }
+                results.result[i].items = items;
+              } else {
+                results.result[i].items = [];
+              }
+              callback.exect();
+            });
+          }
         }
       }
     })
