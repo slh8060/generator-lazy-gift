@@ -11,7 +11,7 @@ let DetailSQL = {
 
   insertDetailOne:'INSERT INTO detail(user_id,title,date) VALUES(?,?,?)',
 
-  insertDetailItem: 'INSERT INTO detail_item(detail_id,title,detail_level,content) VALUES(?,?,?,?)'
+  insertDetailItem: 'INSERT INTO detail_item(detail_id,brief,detail_level,content) VALUES(?,?,?,?)'
 };
 
 module.exports = DetailSQL;

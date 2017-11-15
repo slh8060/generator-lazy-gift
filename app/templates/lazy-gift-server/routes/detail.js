@@ -107,6 +107,8 @@ class AsyncCallback {
 
 }
 
+
+//发布
 router.post('/publish.json', function (req, res) {
   let param = JSON.parse(req.body.p);
   let items = param.items;
@@ -125,7 +127,7 @@ router.post('/publish.json', function (req, res) {
             results.message = err.message;
           } else {
             for (let i = 0; i < items.length; i++) {
-              connection.query(detailSQL.insertDetailItem, [result.insertId, param.title, items[i].detail_level, items[i].content], function (err, result) {
+              connection.query(detailSQL.insertDetailItem, [result.insertId, items[i].brief, items[i].detail_level, items[i].content], function (err, result) {
                 if (err) {
                   results.success = false;
                   results.message = err.message;
