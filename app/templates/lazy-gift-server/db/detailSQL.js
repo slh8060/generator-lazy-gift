@@ -5,7 +5,7 @@ let DetailSQL = {
   'inner JOIN `user` as c on a.user_id=c.id ' +
   'where a.date < ? ORDER BY a.id DESC limit ?,?',
 
-  selectDetailOne: 'SELECT * FROM detail,`user` WHERE detail.id=`user`.id AND `user`.name=? ',
+  selectDetailOne: 'SELECT a.*,b.name,b.header_url FROM detail as a INNER JOIN `user` as b on a.user_id = b.id WHERE a.id=?',
 
   selectDetailItem: 'SELECT * FROM detail_item WHERE detail_id=? ORDER BY detail_level',
 

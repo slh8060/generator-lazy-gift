@@ -15,7 +15,7 @@
 
 
 <button class="insertOneBtn">插入一条详情</button>
-<button class="getInfoBtn">推荐</button>
+<button class="getInfoBtn">详情</button>
 
 
 <script src="libs/jquery/v1.12.4/jquery.min.js"></script>
@@ -64,8 +64,7 @@
 
     $('.getInfoBtn').on('click', function () {
       var p = {
-        "start": 1,
-        "limit": 1
+        "detailId": 55
       };
       $.ajax({
         url: "/detail.json",
@@ -76,10 +75,6 @@
         success: function (results) {
           console.log(results);
           $('.detail').text(results);
-//           for(var i = 0; i < results.length; i ++){
-//             var item = "<p>" + results[i].title + "</p>";
-//             $('.detail').append(item);
-//           }
         }
       })
     })

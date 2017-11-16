@@ -11,16 +11,42 @@ const pool = mysql.createPool(dbConfig.mysql);
 
 //详情
 router.get('/detail.json', function (req, res, next) {
-  /*let username = req.query.username;
-  res.send(username);
-  let results = {};
-  pool.getConnection(function (err,connection) {
-    connection.query(giftSQL.selectGiftInfo,function (err,result) {
-      res.send(result);
-    })
-  });*/
   res.render('detail')
 });
+
+router.post('/detail.json', function (req,res) {
+  let param = JSON.parse(req.body.p);
+  let detailId = param.detailId;
+  let results = {};
+
+  pool.getConnection(function (err,connection) {
+    connection.query(detailSQL.selectDetailOne,detailId,function (err,result) {
+      if (err) {
+        results.success = false;
+        results.message = err.message;
+      } else {
+        results.success = true;
+        results.result = result;
+        results.result[0].items = [];
+        connection.query(detailSQL.selectDetailItem,detailId,function (err,result) {
+          let items = [];
+          for (let i = 0; i < result.length; i ++){
+            let item = {};
+            item.detail_level = result[i].detail_level;
+            item.brief = result[i].brief;
+            item.content = result[i].content;
+            items.push(item);
+          }
+          results.result[0].items = items;
+          res.send(results);
+        });
+      }
+      connection.release();
+    })
+  })
+});
+
+
 
 
 //推荐
@@ -33,14 +59,13 @@ router.post('/recommend.json', function (req, res) {
   let start = param.start;
   let limit = param.limit;
   let firstTime;
+  let results = {};
 
   if (typeof param.firstTime != "undefined") {
     firstTime = param.firstTime;
   } else {
     firstTime = new Date();
   }
-  let results = {};
-
   pool.getConnection(function (err,connection) {
     connection.query(detailSQL.selectDetailAll,[firstTime,(start-1)*limit,limit],function (err,result) {
       if (err) {
@@ -106,7 +131,6 @@ class AsyncCallback {
   }
 
 }
-
 
 //发布
 router.post('/publish.json', function (req, res) {
