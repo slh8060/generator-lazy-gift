@@ -11,11 +11,14 @@
 </head>
 <body>
 <h1>gift</h1>
-<div class="detail"></div>
 
 
-<button class="insertOneBtn">插入一条详情</button>
+<button class="insertOneBtn">发布</button>
 <button class="getInfoBtn">详情</button>
+<button class="recommend">推荐</button>
+<button class="interest">👍／不👍</button>
+
+
 
 
 <script src="libs/jquery/v1.12.4/jquery.min.js"></script>
@@ -25,7 +28,7 @@
 <script>
 
   $(function () {
-
+    //发布
     $('.insertOneBtn').on('click', function () {
       var items = [
         {
@@ -62,6 +65,7 @@
       })
     });
 
+    //详情
     $('.getInfoBtn').on('click', function () {
       var p = {
         "detailId": 57,
@@ -75,10 +79,49 @@
         },
         success: function (results) {
           console.log(results);
+        }
+      })
+    })
+
+    //推荐
+    $('.recommend').on('click', function () {
+      var p = {
+        "start": 1,
+        "limit": 7,
+        "firstTime": "2017-11-15T02:42:22.263Z"
+      };
+      $.ajax({
+        url: "/recommend.json",
+        type: "post",
+        data: {
+          "p": JSON.stringify(p)
+        },
+        success: function (results) {
+          console.log(results);
           $('.detail').text(results);
         }
       })
     })
+
+    //赞／不赞
+    $('.interest').on('click',function () {
+      var p = {
+        "userId": 5,
+        "detailId": 57,
+        "is_interest": 1
+      };
+      $.ajax({
+        url: '/interest.json',
+        type: "post",
+        data: {
+          "p": JSON.stringify(p)
+        },
+        success: function (data) {
+          console.log(data);
+        }
+      })
+    })
+
   })
 </script>
 </body>

@@ -3,15 +3,15 @@ const router = express.Router();
 //导入mysql模块
 const mysql = require('mysql');
 const dbConfig = require('../db/dbConfig');
-const detailSQL = require('../db/detailSQL');
+const giftSQL = require('../db/giftSQL');
 const userSQL = require('../db/userSQL');
 
 // 使用DBConfig.js的配置信息创建一个MySQL连接池
 const pool = mysql.createPool(dbConfig.mysql);
 
 //详情
-router.get('/detail.json', function (req, res, next) {
-  res.render('detail')
+router.get('/gift.json', function (req, res, next) {
+  res.render('gift')
 });
 
 
@@ -22,7 +22,7 @@ router.post('/detail.json', function (req, res) {
     results = {};
 
   pool.getConnection(function (err, connection) {
-    connection.query(detailSQL.selectDetailOne, detailId, function (err, result) {
+    connection.query(giftSQL.selectDetailOne, detailId, function (err, result) {
       if (err) {
         results.success = false;
         results.message = err.message;
@@ -30,7 +30,7 @@ router.post('/detail.json', function (req, res) {
         results.success = true;
         results.result = result;
         results.result[0].items = [];
-        connection.query(detailSQL.selectDetailItem, detailId, function (err, result) {
+        connection.query(giftSQL.selectDetailItem, detailId, function (err, result) {
           let items = [];
           for (let i = 0; i < result.length; i++) {
             let item = {};
@@ -42,7 +42,7 @@ router.post('/detail.json', function (req, res) {
           results.result[0].items = items;
 
           if (typeof userId != "undefined") {
-            connection.query(detailSQL.selectDetailOneIsinterest,[detailId, userId],function (err,result) {
+            connection.query(giftSQL.selectDetailOneIsinterest,[detailId, userId],function (err,result) {
               results.is_interest = result[0].is_interest;
               res.send(results);
             })
@@ -58,9 +58,9 @@ router.post('/detail.json', function (req, res) {
 });
 
 //推荐
-router.get('/recommend.json', function (req, res, next) {
-  res.render('recommend')
-});
+//router.get('/recommend.json', function (req, res, next) {
+//  res.render('recommend')
+//});
 
 router.post('/recommend.json', function (req, res) {
   let param = JSON.parse(req.body.p),
@@ -75,7 +75,7 @@ router.post('/recommend.json', function (req, res) {
     firstTime = new Date();
   }
   pool.getConnection(function (err, connection) {
-    connection.query(detailSQL.selectDetailAll, [firstTime, (start - 1) * limit, limit], function (err, result) {
+    connection.query(giftSQL.selectDetailAll, [firstTime, (start - 1) * limit, limit], function (err, result) {
       if (err) {
         results.success = false;
         results.message = err.message;
@@ -98,7 +98,7 @@ router.post('/recommend.json', function (req, res) {
 
           for (let i = 0; i < result.length; i++) {
             let items = [];
-            connection.query(detailSQL.selectDetailItem, result[i].id, function (err, result) {
+            connection.query(giftSQL.selectDetailItem, result[i].id, function (err, result) {
               if (result.length != 0) {
                 for (let j = 0; j < result.length; j++) {
                   let item = {};
@@ -153,13 +153,13 @@ router.post('/publish.json', function (req, res) {
         results.success = false;
         results.message = err.message;
       } else {
-        connection.query(detailSQL.insertDetailOne, [result[0].id, param.title, new Date()], function (err, result) {
+        connection.query(giftSQL.insertDetailOne, [result[0].id, param.title, new Date()], function (err, result) {
           if (err) {
             results.success = false;
             results.message = err.message;
           } else {
             for (let i = 0; i < items.length; i++) {
-              connection.query(detailSQL.insertDetailItem, [result.insertId, items[i].brief, items[i].detail_level, items[i].content], function (err, result) {
+              connection.query(giftSQL.insertDetailItem, [result.insertId, items[i].brief, items[i].detail_level, items[i].content], function (err, result) {
                 if (err) {
                   results.success = false;
                   results.message = err.message;
@@ -176,6 +176,28 @@ router.post('/publish.json', function (req, res) {
   })
 
 
+});
+
+
+//收藏
+router.post('/interest.json',function (req,res) {
+  let param = JSON.parse(req.body.p);
+  let userId = param.userId,
+      detailId = param.detailId,
+      is_interest = param.is_interest,
+      results = {};
+
+  pool.getConnection(function (err,connection) {
+    connection.query(giftSQL.updateDetailInterest,[is_interest,userId,detailId],function (err,result) {
+      if (err){
+        results.success = false;
+        results.message = err.message;
+      } else {
+        results.success = true;
+        res.send(results);
+      }
+    })
+  })
 });
 
 module.exports = router;

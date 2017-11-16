@@ -108,3 +108,21 @@
        }
     ]
   }
+  
+###收藏接口
+
+接口地址：
+  /interest.json
+  
+参数：
+  p = {
+    "userId": 5,
+    "detailId": 57,
+    "is_interest": 1  //0 为false，1为true
+  }
+  
+返回：
+ {
+    success: true/false,   //成功或失败
+    message: '失败原因'     //查询失败原因
+ }

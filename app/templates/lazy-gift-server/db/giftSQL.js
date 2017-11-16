@@ -1,4 +1,4 @@
-let DetailSQL = {
+let GiftSQL = {
   selectDetailAll: 'SELECT a.id,a.title,unix_timestamp(a.date) as date,a.interest_count, a.uninterest_count,' +
   'c.name,c.header_url ' +
   'FROM detail as a ' +
@@ -14,7 +14,9 @@ let DetailSQL = {
 
   insertDetailOne:'INSERT INTO detail(user_id,title,date) VALUES(?,?,?)',
 
-  insertDetailItem: 'INSERT INTO detail_item(detail_id,brief,detail_level,content) VALUES(?,?,?,?)'
+  insertDetailItem: 'INSERT INTO detail_item(detail_id,brief,detail_level,content) VALUES(?,?,?,?)',
+
+  updateDetailInterest: 'UPDATE interest SET is_interest=? WHERE user_id=? AND detail_id=?'
 };
 
-module.exports = DetailSQL;
+module.exports = GiftSQL;
