@@ -80,13 +80,15 @@
 
 参数：
   p = {
-    "detailId": 55
+    "detailId": 55,
+    "userId": 5   //用户若登录就带此参数，否则无
   }
   
 返回:
   {
     success: true/false,  //成功或失败,注：数据全部加载完成返回 false
-    message："失败原因",     //数据全部加载完显示："没有更多数据"
+    message："失败原因",   //数据全部加载完显示："没有更多数据"
+    is_interest:0／1,    //0 为false，1为true. 用户没有登录，返回0
     result:[
        {
          id: 50,

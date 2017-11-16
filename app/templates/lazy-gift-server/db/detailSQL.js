@@ -9,6 +9,9 @@ let DetailSQL = {
 
   selectDetailItem: 'SELECT * FROM detail_item WHERE detail_id=? ORDER BY detail_level',
 
+  selectDetailOneIsinterest: 'SELECT is_interest FROM interest WHERE detail_id=? AND user_id=?',
+  //selectDetailOneIsinterest: 'SELECT a.*,b.name,b.header_url,c.is_interest FROM detail as a INNER JOIN `user` as b on a.user_id = b.id INNER JOIN interest as c on a.id=c.detail_id AND a.user_id=c.user_id WHERE a.id=?',
+
   insertDetailOne:'INSERT INTO detail(user_id,title,date) VALUES(?,?,?)',
 
   insertDetailItem: 'INSERT INTO detail_item(detail_id,brief,detail_level,content) VALUES(?,?,?,?)'

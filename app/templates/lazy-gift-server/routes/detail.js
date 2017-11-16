@@ -14,13 +14,15 @@ router.get('/detail.json', function (req, res, next) {
   res.render('detail')
 });
 
-router.post('/detail.json', function (req,res) {
-  let param = JSON.parse(req.body.p);
-  let detailId = param.detailId;
-  let results = {};
 
-  pool.getConnection(function (err,connection) {
-    connection.query(detailSQL.selectDetailOne,detailId,function (err,result) {
+router.post('/detail.json', function (req, res) {
+  let param = JSON.parse(req.body.p);
+  let detailId = param.detailId,
+    userId = param.userId,
+    results = {};
+
+  pool.getConnection(function (err, connection) {
+    connection.query(detailSQL.selectDetailOne, detailId, function (err, result) {
       if (err) {
         results.success = false;
         results.message = err.message;
@@ -28,9 +30,9 @@ router.post('/detail.json', function (req,res) {
         results.success = true;
         results.result = result;
         results.result[0].items = [];
-        connection.query(detailSQL.selectDetailItem,detailId,function (err,result) {
+        connection.query(detailSQL.selectDetailItem, detailId, function (err, result) {
           let items = [];
-          for (let i = 0; i < result.length; i ++){
+          for (let i = 0; i < result.length; i++) {
             let item = {};
             item.detail_level = result[i].detail_level;
             item.brief = result[i].brief;
@@ -38,7 +40,16 @@ router.post('/detail.json', function (req,res) {
             items.push(item);
           }
           results.result[0].items = items;
-          res.send(results);
+
+          if (typeof userId != "undefined") {
+            connection.query(detailSQL.selectDetailOneIsinterest,[detailId, userId],function (err,result) {
+              results.is_interest = result[0].is_interest;
+              res.send(results);
+            })
+          } else {
+            results.is_interest = 0;
+            res.send(results);
+          }
         });
       }
       connection.release();
@@ -46,28 +57,25 @@ router.post('/detail.json', function (req,res) {
   })
 });
 
-
-
-
 //推荐
 router.get('/recommend.json', function (req, res, next) {
   res.render('recommend')
 });
 
 router.post('/recommend.json', function (req, res) {
-  let param = JSON.parse(req.body.p);
-  let start = param.start;
-  let limit = param.limit;
-  let firstTime;
-  let results = {};
+  let param = JSON.parse(req.body.p),
+    start = param.start,
+    limit = param.limit,
+    firstTime, results = {};
+
 
   if (typeof param.firstTime != "undefined") {
     firstTime = param.firstTime;
   } else {
     firstTime = new Date();
   }
-  pool.getConnection(function (err,connection) {
-    connection.query(detailSQL.selectDetailAll,[firstTime,(start-1)*limit,limit],function (err,result) {
+  pool.getConnection(function (err, connection) {
+    connection.query(detailSQL.selectDetailAll, [firstTime, (start - 1) * limit, limit], function (err, result) {
       if (err) {
         results.success = false;
         results.message = err.message;
@@ -83,16 +91,16 @@ router.post('/recommend.json', function (req, res) {
           results.firstTime = firstTime;
           results.result = result;
 
-          var callback = new AsyncCallback(result.length,function () {
+          var callback = new AsyncCallback(result.length, function () {
             res.send(results);
             connection.release();
           });
 
-          for (let i = 0; i < result.length; i ++){
+          for (let i = 0; i < result.length; i++) {
             let items = [];
-            connection.query(detailSQL.selectDetailItem,result[i].id,function (err,result) {
+            connection.query(detailSQL.selectDetailItem, result[i].id, function (err, result) {
               if (result.length != 0) {
-                for (let j = 0; j < result.length; j ++){
+                for (let j = 0; j < result.length; j++) {
                   let item = {};
                   item.detail_level = result[j].detail_level;
                   item.brief = result[j].brief;
