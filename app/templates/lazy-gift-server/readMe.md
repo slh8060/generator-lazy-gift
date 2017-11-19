@@ -110,7 +110,7 @@
     ]
   }
   
-###收藏/取消收藏接口
+###赞/不赞接口
 
 接口地址：
   /approve.json
@@ -132,15 +132,33 @@
 
 ###收藏列表接口
 接口地址：
-  /collect.json
+  /collectList.json
   
 参数：
   p = {
-    "userId": 5,
+    "userId": 5
   }
   
 返回：
  {
     success: true/false,   //成功或失败
-    message: '失败原因'     //查询失败原因
+    message: '失败原因',     //查询失败原因
+    result:[
+          {
+            id: 50,
+            name: 'slh',
+            header_url: 'url',
+            title: '去烧烤要带什么',
+            date: '1510620431',
+            agree_count: 3,
+            unagree_count: 4,
+            items:[
+              {
+                detail_level: 1,
+                brief: '烧烤工具',
+                content: '烧烤架、烧烤冰块'
+              }        
+            ]
+          }
+       ]
  }

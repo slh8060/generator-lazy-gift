@@ -6,18 +6,64 @@ const dbConfig = require('../db/dbConfig');
 const giftSQL = require('../db/giftSQL');
 const userSQL = require('../db/userSQL');
 const DbUtil = require('../utils/DbUtil');
+
 const pool = mysql.createPool(dbConfig.mysql);
 
 let dbUtil = new DbUtil();
 
+router.use(function timeLog(req, res, next) {
+  // console.log('Time: ', Date.now() + "," + req.url + "，" + req.method);
+  if (req.method == "POST")
+    req.p = JSON.parse(req.body.p);
+  next();
+});
+
+// router.get('/gift.json',RouterUtil.getFunction(function (req, res) {
+//   res.render('gift');
+// }));
 
 router.get('/gift.json', function (req, res, next) {
-  res.render('gift')
+  res.render('gift');
 });
+
+
+// router.post('/detail.json',RouterUtil.postFunction(function (param, res) {
+//   let detailId = param.detailId,
+//     userId = param.userId,
+//     results = {};
+//
+//   dbUtil.query(giftSQL.selectDetailOne, detailId, function (result) {
+//     results.success = true;
+//     results.result = result;
+//     results.result[0].items = [];
+//     //throw new Error("999");
+//     dbUtil.query(giftSQL.selectDetailItem, detailId, function (result) {
+//       let items = [];
+//       for (let i = 0; i < result.length; i++) {
+//         let item = {};
+//         item.detail_level = result[i].detail_level;
+//         item.brief = result[i].brief;
+//         item.content = result[i].content;
+//         items.push(item);
+//       }
+//       results.result[0].items = items;
+//       if (typeof userId != "undefined") {
+//         dbUtil.query(giftSQL.selectDetailOneIsinterest, [detailId, userId], function (result) {
+//           results.result[0].is_approve = result[0].is_approve;
+//           res.send(results);
+//         })
+//       } else {
+//         results.result[0].is_approve = 0;
+//         res.send(results);
+//       }
+//     });
+//   });
+//   dbUtil.release();
+// }));
 
 //详情
 router.post('/detail.json', function (req, res) {
-  let param = JSON.parse(req.body.p);
+  let param = req.p;//JSON.parse(req.body.p);
   let detailId = param.detailId,
     userId = param.userId,
     results = {};
@@ -38,7 +84,7 @@ router.post('/detail.json', function (req, res) {
       }
       results.result[0].items = items;
       if (typeof userId != "undefined") {
-        dbUtil.query(giftSQL.selectDetailOneIsinterest, [detailId, userId], function (result) {
+        dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
           results.result[0].is_approve = result[0].is_approve;
           res.send(results);
         })
@@ -124,12 +170,11 @@ router.post('/detail.json', function (req, res) {
 
 //推荐
 router.post('/recommend.json', function (req, res) {
-  let param = JSON.parse(req.body.p),
+  let param = req.p,//JSON.parse(req.body.p);
     start = param.start,
     limit = param.limit,
     userId = param.userId,
     firstTime, results = {};
-
 
   if (typeof param.firstTime != "undefined") {
     firstTime = param.firstTime;
@@ -152,6 +197,7 @@ router.post('/recommend.json', function (req, res) {
         let items = [];
         let detailId = result[i].id;
         dbUtil.query(giftSQL.selectDetailItem, result[i].id, function (result) {
+          results.result[i].items = [];
           if (result.length != 0) {
             for (let j = 0; j < result.length; j++) {
               let item = {};
@@ -161,12 +207,10 @@ router.post('/recommend.json', function (req, res) {
               items.push(item);
             }
             results.result[i].items = items;
-          } else {
-            results.result[i].items = [];
           }
 
           if (typeof userId != "undefined") {
-            dbUtil.query(giftSQL.selectDetailOneIsinterest, [detailId, userId], function (result) {
+            dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
               if (result.length != 0) {
                 results.result[i].is_approve = result[0].is_approve;
               } else {
@@ -263,7 +307,7 @@ class AsyncCallback {
 
 //发布
 router.post('/publish.json', function (req, res) {
-  let param = JSON.parse(req.body.p);
+  let param = req.p;//JSON.parse(req.body.p);
   let items = param.items;
   var i = 1;
   let results = {};
@@ -314,53 +358,132 @@ router.post('/publish.json', function (req, res) {
 });
 
 
-//收藏\取消收藏
+//赞\不赞
 router.post('/approve.json', function (req, res) {
-  let param = JSON.parse(req.body.p);
+  let param = req.p;//JSON.parse(req.body.p);
   let userId = param.userId,
     detailId = param.detailId,
     is_approve = param.is_approve,
     results = {};
 
+  dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
+    if (result.length != 0) {
+      console.log('1111', result[0].is_approve);
+      console.log('222', is_approve);
 
-
-  pool.getConnection(function (err, connection) {
-
-
-    connection.query(giftSQL.updateDetailInterest, [is_approve, userId, detailId], function (err, result) {
-      if (err) {
-        results.success = false;
-        results.message = err.message;
-      } else {
-        if (is_approve == 1) {
-          connection.query(giftSQL.insertCollectOne, [userId, detailId], function (err, result) {
-            if (!err) {
-              results.success = true;
-              res.send(results);
-            }
-          })
-        } else {
-          connection.query(giftSQL.deleteCollectone, [userId, detailId], function (err, result) {
-            if (!err) {
-              results.success = true;
-              res.send(results);
-            }
-          })
+      if (result[0].is_approve == is_approve) {
+        results.success = true;
+        results.is_approve = result[0].is_approve;
+        results.detailId = detailId;
+        switch (result[0].is_approve) {
+          case 0:
+            results.message = "您没有任何评价";
+            break;
+          case 1:
+            results.message = "已赞";
+            break;
+          case -1:
+            results.message = "已丢过大便";
+            break;
+          default:
         }
+        res.send(results);
+      } else {
+        dbUtil.query(giftSQL.updateDetailApprove, [is_approve, userId, detailId], function (result) {
+          results.success = true;
+          results.detailId = detailId;
+          results.is_approve = is_approve;
+          res.send(results);
+        });
+      }
+    } else {
+      dbUtil.query(giftSQL.insertDetailApprove, [userId, detailId, is_approve], function (result) {
+        results.success = true;
+        results.is_approve = is_approve;
+        results.detailId = detailId;
+        res.send(results);
+      });
+    }
+
+  });
+
+});
+
+//收藏接口
+router.post('/collect.json', function (req, res) {
+  let param = JSON.parse(req.body.p),
+    userId = param.userId,
+    detailId = param.detail_id,
+    isCollect = param.is_collect
+  results = {};
+
+  //收藏
+  if (isCollect) {
+    dbUtil.query(giftSQL.selectCollectOne, [userId, detailId], function (result) {
+      if (result.length == 0) {
+        dbUtil.query(giftSQL.insertCollectOne, [userId, detailId], function (result) {
+          results.success = true;
+          res.send(results);
+        })
+      } else {
+        results.success = false;
+        results.message = "已收藏";
+        res.send(results);
       }
     })
-  });
+  } else {    //取消收藏
+    dbUtil.query(giftSQL.deleteCollectone, [userId, detailId], function (result) {
+      results.success = true;
+      res.send(results);
+    })
+
+  }
 });
 
 //收藏列表接口
-router.post('/collect.json', function (req, res) {
-  let param = JSON.parse(req.body.p);
-  let userId = param.userId;
+router.post('/collectList.json', function (req, res) {
+  let param = JSON.parse(req.body.p),
+    userId = param.userId,
+    results = {};
 
-  pool.getConnection(function (err, connection) {
-    connection.query()
+  dbUtil.query(giftSQL.selectCollectAll, userId, function (result) {
+    results.result = [];
+    if (result.length != 0) {
+      for (let i = 0; i < result.length; i++) {
+        let detailId = result[i].detail_id;
+        dbUtil.query(giftSQL.selectDetailOne, detailId, function (result) {
+          results.success = true;
+          results.result = result;
+          results.result[0].items = [];
+          //throw new Error("999");
+          dbUtil.query(giftSQL.selectDetailItem, detailId, function (result) {
+            let items = [];
+            for (let i = 0; i < result.length; i++) {
+              let item = {};
+              item.detail_level = result[i].detail_level;
+              item.brief = result[i].brief;
+              item.content = result[i].content;
+              items.push(item);
+            }
+            results.result[0].items = items;
+            if (typeof userId != "undefined") {
+              dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
+                results.result[0].is_approve = result[0].is_approve;
+                res.send(results);
+              })
+            } else {
+              results.result[0].is_approve = 0;
+              res.send(results);
+            }
+          });
+
+        })
+      }
+    }
+    results.success = true;
+
   });
+
+
 });
-
-
 module.exports = router;

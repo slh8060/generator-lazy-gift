@@ -17,7 +17,9 @@
 <button class="getInfoBtn">详情</button>
 <button class="recommend">推荐</button>
 <button class="interest">👍／不👍</button>
-<button class="collect">收藏列表</button>
+<button class="collect">收藏</button>
+<button class="collectList">收藏列表</button>
+
 
 
 
@@ -111,8 +113,8 @@
     $('.interest').on('click',function () {
       var p = {
         "userId": 5,
-        "detailId": 57,
-        "is_interest": 1
+        "detailId": 56,
+        "is_approve": -1
       };
       $.ajax({
         url: '/approve.json',
@@ -130,10 +132,29 @@
     //收藏列表
     $('.collect').on('click',function () {
       var p = {
+        "userId": 5,
+        "detail_id": 57,
+        "is_collect": true
+      };
+      $.ajax({
+        url: '/collect.json',
+        type: "post",
+        data: {
+          "p": JSON.stringify(p)
+        },
+        success: function (data) {
+          console.log(data);
+        }
+      })
+    })
+
+    //收藏列表
+    $('.collectList').on('click',function () {
+      var p = {
         "userId": 5
       };
       $.ajax({
-        url: '/approve.json',
+        url: '/collectList.json',
         type: "post",
         data: {
           "p": JSON.stringify(p)
