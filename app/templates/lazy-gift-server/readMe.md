@@ -30,6 +30,7 @@
 返回：
  {
     success: true/false,   //成功或失败
+    detailId: 56,
     message: '失败原因'     //查询失败原因
  }
 
@@ -59,8 +60,8 @@
         header_url: 'url',
         title: '去烧烤要带什么',
         date: '1510620431',
-        interest_count: 3,
-        uninterest_count: 4,
+        agree_count: 3,
+        unagree_count: 4,
         items:[
           {
             detail_level: 1,
@@ -88,7 +89,6 @@
   {
     success: true/false,  //成功或失败,注：数据全部加载完成返回 false
     message："失败原因",   //数据全部加载完显示："没有更多数据"
-    is_interest:0／1,    //0 为false，1为true. 用户没有登录，返回0
     result:[
        {
          id: 50,
@@ -96,8 +96,9 @@
          header_url: 'url',
          title: '去烧烤要带什么',
          date: '1510620431',
-         interest_count: 3,
-         uninterest_count: 4,
+         agree_count: 3,
+         unagree_count: 4,
+         is_approve: 0／1/-1,    //0 没有任何意见，1赞成， -1反对
          items:[
            {
              detail_level: 1,
@@ -109,16 +110,33 @@
     ]
   }
   
-###收藏接口
+###收藏/取消收藏接口
 
 接口地址：
-  /interest.json
+  /approve.json
   
 参数：
   p = {
     "userId": 5,
     "detailId": 57,
-    "is_interest": 1  //0 为false，1为true
+    "is_approve": 1  //0 为false，1为true
+  }
+  
+返回：
+ {
+    success: true/false,   //成功或失败
+    message: '失败原因',     //查询失败原因
+    is_approve:,
+    detailId:
+ }
+
+###收藏列表接口
+接口地址：
+  /collect.json
+  
+参数：
+  p = {
+    "userId": 5,
   }
   
 返回：

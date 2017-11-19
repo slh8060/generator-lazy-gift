@@ -17,6 +17,8 @@
 <button class="getInfoBtn">详情</button>
 <button class="recommend">推荐</button>
 <button class="interest">👍／不👍</button>
+<button class="collect">收藏列表</button>
+
 
 
 
@@ -28,6 +30,7 @@
 <script>
 
   $(function () {
+
     //发布
     $('.insertOneBtn').on('click', function () {
       var items = [
@@ -69,7 +72,7 @@
     $('.getInfoBtn').on('click', function () {
       var p = {
         "detailId": 57,
-        "userId": 5
+       // "userId": 5
       };
       $.ajax({
         url: "/detail.json",
@@ -88,7 +91,8 @@
       var p = {
         "start": 1,
         "limit": 7,
-        "firstTime": "2017-11-15T02:42:22.263Z"
+        "firstTime": "2017-11-15T02:42:22.263Z",
+        "userId": 5
       };
       $.ajax({
         url: "/recommend.json",
@@ -111,7 +115,25 @@
         "is_interest": 1
       };
       $.ajax({
-        url: '/interest.json',
+        url: '/approve.json',
+        type: "post",
+        data: {
+          "p": JSON.stringify(p)
+        },
+        success: function (data) {
+          console.log(data);
+        }
+      })
+    })
+
+
+    //收藏列表
+    $('.collect').on('click',function () {
+      var p = {
+        "userId": 5
+      };
+      $.ajax({
+        url: '/approve.json',
         type: "post",
         data: {
           "p": JSON.stringify(p)
