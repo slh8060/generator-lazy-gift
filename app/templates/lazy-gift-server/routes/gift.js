@@ -5,18 +5,17 @@ const mysql = require('mysql');
 const dbConfig = require('../db/dbConfig');
 const giftSQL = require('../db/giftSQL');
 const userSQL = require('../db/userSQL');
+//导入 util
 const DbUtil = require('../utils/DbUtil');
+const routerMiddle = require('../utils/RouterUtil').routerMiddle();
+const giftUtil = require('../utils/GiftUtil');
 
 const pool = mysql.createPool(dbConfig.mysql);
 
 let dbUtil = new DbUtil();
 
-router.use(function timeLog(req, res, next) {
-  // console.log('Time: ', Date.now() + "," + req.url + "，" + req.method);
-  if (req.method == "POST")
-    req.p = JSON.parse(req.body.p);
-  next();
-});
+router.use(routerMiddle);
+
 
 // router.get('/gift.json',RouterUtil.getFunction(function (req, res) {
 //   res.render('gift');
@@ -26,40 +25,6 @@ router.get('/gift.json', function (req, res, next) {
   res.render('gift');
 });
 
-
-// router.post('/detail.json',RouterUtil.postFunction(function (param, res) {
-//   let detailId = param.detailId,
-//     userId = param.userId,
-//     results = {};
-//
-//   dbUtil.query(giftSQL.selectDetailOne, detailId, function (result) {
-//     results.success = true;
-//     results.result = result;
-//     results.result[0].items = [];
-//     //throw new Error("999");
-//     dbUtil.query(giftSQL.selectDetailItem, detailId, function (result) {
-//       let items = [];
-//       for (let i = 0; i < result.length; i++) {
-//         let item = {};
-//         item.detail_level = result[i].detail_level;
-//         item.brief = result[i].brief;
-//         item.content = result[i].content;
-//         items.push(item);
-//       }
-//       results.result[0].items = items;
-//       if (typeof userId != "undefined") {
-//         dbUtil.query(giftSQL.selectDetailOneIsinterest, [detailId, userId], function (result) {
-//           results.result[0].is_approve = result[0].is_approve;
-//           res.send(results);
-//         })
-//       } else {
-//         results.result[0].is_approve = 0;
-//         res.send(results);
-//       }
-//     });
-//   });
-//   dbUtil.release();
-// }));
 
 //详情
 router.post('/detail.json', function (req, res) {
@@ -73,26 +38,39 @@ router.post('/detail.json', function (req, res) {
     results.result = result;
     results.result[0].items = [];
     //throw new Error("999");
-    dbUtil.query(giftSQL.selectDetailItem, detailId, function (result) {
-      let items = [];
-      for (let i = 0; i < result.length; i++) {
-        let item = {};
-        item.detail_level = result[i].detail_level;
-        item.brief = result[i].brief;
-        item.content = result[i].content;
-        items.push(item);
-      }
+    giftUtil.getDetailItem(detailId, function (items) {
       results.result[0].items = items;
       if (typeof userId != "undefined") {
-        dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
-          results.result[0].is_approve = result[0].is_approve;
+        giftUtil.getOneIsApprove([detailId, userId], function (is_approve) {
+          results.result[0].is_approve = is_approve;
           res.send(results);
-        })
+        });
       } else {
         results.result[0].is_approve = 0;
         res.send(results);
       }
     });
+
+    // dbUtil.query(giftSQL.selectDetailItem, detailId, function (result) {
+    //   let items = [];
+    //   for (let i = 0; i < result.length; i++) {
+    //     let item = {};
+    //     item.detail_level = result[i].detail_level;
+    //     item.brief = result[i].brief;
+    //     item.content = result[i].content;
+    //     items.push(item);
+    //   }
+    //   results.result[0].items = items;
+    //   if (typeof userId != "undefined") {
+    //     dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
+    //       results.result[0].is_approve = result[0].is_approve;
+    //       res.send(results);
+    //     })
+    //   } else {
+    //     results.result[0].is_approve = 0;
+    //     res.send(results);
+    //   }
+    // });
   });
   dbUtil.release();
 
@@ -196,35 +174,18 @@ router.post('/recommend.json', function (req, res) {
       for (let i = 0; i < result.length; i++) {
         let items = [];
         let detailId = result[i].id;
-        dbUtil.query(giftSQL.selectDetailItem, result[i].id, function (result) {
-          results.result[i].items = [];
-          if (result.length != 0) {
-            for (let j = 0; j < result.length; j++) {
-              let item = {};
-              item.detail_level = result[j].detail_level;
-              item.brief = result[j].brief;
-              item.content = result[j].content;
-              items.push(item);
-            }
-            results.result[i].items = items;
-          }
-
+        giftUtil.getDetailItem(result[i].id, function (items) {
+          results.result[i].items = items;
+          results.result[i].is_approve = 0;
           if (typeof userId != "undefined") {
-            dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
-              if (result.length != 0) {
-                results.result[i].is_approve = result[0].is_approve;
-              } else {
-                results.result[i].is_approve = 0;
-              }
+            giftUtil.getOneIsApprove([detailId, userId], function (is_approve) {
+              results.result[i].is_approve = is_approve;
               callback.exect();
             })
           } else {
-            results.result[i].is_approve = 0;
-            res.send(results);
             callback.exect();
           }
-
-        });
+        })
       }
     }
   });
@@ -309,7 +270,6 @@ class AsyncCallback {
 router.post('/publish.json', function (req, res) {
   let param = req.p;//JSON.parse(req.body.p);
   let items = param.items;
-  var i = 1;
   let results = {};
   dbUtil.query(userSQL.selectUserOne, param.uname, function (result) {
     dbUtil.query(giftSQL.insertDetailOne, [result[0].id, param.title, new Date()], function (result) {
@@ -326,35 +286,6 @@ router.post('/publish.json', function (req, res) {
     })
   });
   dbUtil.release();
-  // pool.getConnection(function (err, connection) {
-  //   connection.query(userSQL.selectUserOne, param.uname, function (err, result) {
-  //     if (err) {
-  //       results.success = false;
-  //       results.message = err.message;
-  //     } else {
-  //       connection.query(giftSQL.insertDetailOne, [result[0].id, param.title, new Date()], function (err, result) {
-  //         if (err) {
-  //           results.success = false;
-  //           results.message = err.message;
-  //         } else {
-  //           for (let i = 0; i < items.length; i++) {
-  //             connection.query(giftSQL.insertDetailItem, [result.insertId, items[i].brief, items[i].detail_level, items[i].content], function (err, result) {
-  //               if (err) {
-  //                 results.success = false;
-  //                 results.message = err.message;
-  //               }
-  //             });
-  //           }
-  //           results.success = true;
-  //           res.send(results);
-  //         }
-  //       })
-  //     }
-  //     connection.release();
-  //   });
-  // })
-
-
 });
 
 
@@ -368,9 +299,6 @@ router.post('/approve.json', function (req, res) {
 
   dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
     if (result.length != 0) {
-      console.log('1111', result[0].is_approve);
-      console.log('222', is_approve);
-
       if (result[0].is_approve == is_approve) {
         results.success = true;
         results.is_approve = result[0].is_approve;
@@ -449,6 +377,9 @@ router.post('/collectList.json', function (req, res) {
   dbUtil.query(giftSQL.selectCollectAll, userId, function (result) {
     results.result = [];
     if (result.length != 0) {
+      var callback = new AsyncCallback(result.length, function () {
+        res.send(results);
+      });
       for (let i = 0; i < result.length; i++) {
         let detailId = result[i].detail_id;
         dbUtil.query(giftSQL.selectDetailOne, detailId, function (result) {
@@ -456,26 +387,40 @@ router.post('/collectList.json', function (req, res) {
           results.result = result;
           results.result[0].items = [];
           //throw new Error("999");
-          dbUtil.query(giftSQL.selectDetailItem, detailId, function (result) {
-            let items = [];
-            for (let i = 0; i < result.length; i++) {
-              let item = {};
-              item.detail_level = result[i].detail_level;
-              item.brief = result[i].brief;
-              item.content = result[i].content;
-              items.push(item);
-            }
-            results.result[0].items = items;
+
+          giftUtil.getDetailItem(detailId, function (items) {
+            results.result[i].items = items;
+            results.result[i].is_approve = 0;
             if (typeof userId != "undefined") {
-              dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
-                results.result[0].is_approve = result[0].is_approve;
-                res.send(results);
+              giftUtil.getOneIsApprove([detailId, userId], function (is_approve) {
+                results.result[i].is_approve = is_approve;
+                callback.exect();
               })
             } else {
-              results.result[0].is_approve = 0;
-              res.send(results);
+              callback.exect();
             }
-          });
+          })
+
+          // dbUtil.query(giftSQL.selectDetailItem, detailId, function (result) {
+          //   let items = [];
+          //   for (let i = 0; i < result.length; i++) {
+          //     let item = {};
+          //     item.detail_level = result[i].detail_level;
+          //     item.brief = result[i].brief;
+          //     item.content = result[i].content;
+          //     items.push(item);
+          //   }
+          //   results.result[0].items = items;
+          //   if (typeof userId != "undefined") {
+          //     dbUtil.query(giftSQL.selectDetailOneIsApprove, [detailId, userId], function (result) {
+          //       results.result[0].is_approve = result[0].is_approve;
+          //       res.send(results);
+          //     })
+          //   } else {
+          //     results.result[0].is_approve = 0;
+          //     res.send(results);
+          //   }
+          // });
 
         })
       }

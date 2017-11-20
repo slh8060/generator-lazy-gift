@@ -2,16 +2,18 @@ const express = require('express');
 const router = express.Router();
 
 
+function routerMiddle() {
+  return function timeLog(req, res, next) {
+    if (req.method == "POST")
+      req.p = JSON.parse(req.body.p);
+    next();
+  };
+}
 
-// router.get('/gift.json', function (req, res, next) {
-//   res.send('11231');
-// });
 
-// router.get('/gift.json', getFunction(function (req, res) {
-//   res.send('routerFunction');
-// }));
-
-
+module.exports = {
+  routerMiddle: routerMiddle
+};
 
 
 function getFunction(callback) {
@@ -24,7 +26,6 @@ function getFunction(callback) {
 
 
 function postFunction(callback) {
-
   return function (req, res, next) {
     let param = JSON.parse(req.body.p);
     callback(param, res);
@@ -32,9 +33,4 @@ function postFunction(callback) {
 }
 
 
-module.exports = {
-  postFunction: postFunction,
-  getFunction: getFunction
-};
-// module.exports = router;
 
