@@ -9,6 +9,7 @@ const userSQL = require('../db/userSQL');
 const DbUtil = require('../utils/DbUtil');
 const routerMiddle = require('../utils/RouterUtil').routerMiddle();
 const giftUtil = require('../utils/GiftUtil');
+const commonUtil = require('../utils/CommonUtil');
 
 const pool = mysql.createPool(dbConfig.mysql);
 
@@ -36,6 +37,12 @@ router.post('/detail.json', function (req, res) {
   dbUtil.query(giftSQL.selectDetailOne, detailId, function (result) {
     results.success = true;
     results.result = result;
+
+    let now = new Date();  //getTime()  获取的是毫秒数
+    let publishDate = result[0].date;
+    let differ = (now - publishDate)/1000;
+    result[0].date = commonUtil.getTime(differ,publishDate);
+
     results.result[0].items = [];
     //throw new Error("999");
     giftUtil.getDetailItem(detailId, function (items) {
@@ -168,12 +175,20 @@ router.post('/recommend.json', function (req, res) {
       results.success = true;
       results.firstTime = firstTime;
       results.result = result;
+
+      let now = new Date();  //getTime()  获取的是毫秒数
+
+
       var callback = new AsyncCallback(result.length, function () {
         res.send(results);
       });
       for (let i = 0; i < result.length; i++) {
         let items = [];
         let detailId = result[i].id;
+        let publishDate = result[i].date;
+        let differ = (now - publishDate)/1000;
+        result[i].date = commonUtil.getTime(differ,publishDate);
+
         giftUtil.getDetailItem(result[i].id, function (items) {
           results.result[i].items = items;
           results.result[i].is_approve = 0;
@@ -385,6 +400,12 @@ router.post('/collectList.json', function (req, res) {
         dbUtil.query(giftSQL.selectDetailOne, detailId, function (result) {
           results.success = true;
           results.result = result;
+
+          let now = new Date();  //getTime()  获取的是毫秒数
+          let publishDate = result[i].date;
+          let differ = (now - publishDate)/1000;
+          result[i].date = commonUtil.getTime(differ,publishDate);
+
           results.result[0].items = [];
           //throw new Error("999");
 

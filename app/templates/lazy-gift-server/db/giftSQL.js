@@ -1,5 +1,5 @@
 let GiftSQL = {
-  selectDetailAll: 'SELECT a.*,unix_timestamp(a.date) as date,' +
+  selectDetailAll: 'SELECT a.*,(a.date) as date,' +
   'c.name,c.header_url ' +
   'FROM detail as a ' +
   'inner JOIN `user` as c on a.user_id=c.id ' +
