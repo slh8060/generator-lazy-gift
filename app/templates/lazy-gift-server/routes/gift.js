@@ -157,7 +157,7 @@ router.post('/detail.json', function (req, res) {
 router.post('/recommend.json', function (req, res) {
   let param = req.p,//JSON.parse(req.body.p);
     start = param.start,
-    limit = param.limit,
+    limit = 20, //param.limit,
     userId = param.userId,
     firstTime, results = {};
 

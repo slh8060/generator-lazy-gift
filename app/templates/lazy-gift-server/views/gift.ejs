@@ -19,9 +19,7 @@
 <button class="interest">👍／不👍</button>
 <button class="collect">收藏</button>
 <button class="collectList">收藏列表</button>
-
-
-
+<button class="comment">评论</button>
 
 
 
@@ -128,7 +126,6 @@
       })
     })
 
-
     //收藏列表
     $('.collect').on('click',function () {
       var p = {
@@ -164,6 +161,28 @@
         }
       })
     })
+
+    //评论
+    $('.comment').on('click',function () {
+      var p = {
+        "ownerUserId": 4,
+        "detailId": 102,
+        "content": "拿手机开发哈卡",
+        //"targetUserId": 7,
+        "parentId": 5
+      };
+      $.ajax({
+        url: '/comment.json',
+        type: "post",
+        data: {
+          "p": JSON.stringify(p)
+        },
+        success: function (data) {
+          console.log(data);
+        }
+      })
+    });
+
 
   })
 </script>
