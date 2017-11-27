@@ -5,6 +5,8 @@ const mysql = require('mysql');
 const dbConfig = require('../db/dbConfig');
 const giftSQL = require('../db/giftSQL');
 const userSQL = require('../db/userSQL');
+const commentSQL = require('../db/commentSQL');
+
 //导入 util
 const DbUtil = require('../utils/DbUtil');
 const routerMiddle = require('../utils/RouterUtil').routerMiddle();
@@ -36,26 +38,50 @@ router.post('/detail.json', function (req, res) {
 
   dbUtil.query(giftSQL.selectDetailOne, detailId, function (result) {
     results.success = true;
-    results.result = result;
+    results.result = result[0];
 
     let now = new Date();  //getTime()  获取的是毫秒数
     let publishDate = result[0].date;
     let differ = (now - publishDate)/1000;
     result[0].date = commonUtil.getTime(differ,publishDate);
 
-    results.result[0].items = [];
-    //throw new Error("999");
+    results.result.items = [];
+
     giftUtil.getDetailItem(detailId, function (items) {
-      results.result[0].items = items;
-      if (typeof userId != "undefined") {
-        giftUtil.getOneIsApprove([detailId, userId], function (is_approve) {
-          results.result[0].is_approve = is_approve;
-          res.send(results);
+      results.result.items = items;
+
+      dbUtil.query(commentSQL.selectComment,detailId,function (result) {  //评论回复查询
+        results.result.comment = result;
+        var callback = new AsyncCallback(result.length, function () {
+          if (typeof userId != "undefined") {
+            giftUtil.getOneIsApprove([detailId, userId], function (is_approve) {
+              results.result.is_approve = is_approve;
+              res.send(results);
+            });
+          } else {
+            results.result.is_approve = 0;
+            res.send(results);
+          }
         });
-      } else {
-        results.result[0].is_approve = 0;
-        res.send(results);
-      }
+
+        result.forEach(function (item,index) {
+          dbUtil.query(commentSQL.selectReply,[detailId,item.id],function (result) {
+            if (result.length != 0){
+              results.result.comment[index].reply = result;
+            }
+
+            callback.exect();
+
+
+
+
+          });
+
+        });
+
+
+      });
+
     });
 
     // dbUtil.query(giftSQL.selectDetailItem, detailId, function (result) {
