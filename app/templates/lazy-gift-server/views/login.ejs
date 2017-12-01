@@ -16,7 +16,7 @@
         <input class="pwd-ipt" type="password">
     </div>
     <div>
-        <a type="button" href="/regist">regist</a>
+        <a type="button" href="/regist.json">regist</a>
         <button class="submit" type="submit">submit</button>
         <button type="reset">reset</button>
     </div>
@@ -24,7 +24,6 @@
 
 </form>
 
-<button class="myMessage">我的消息</button>
 
 <script src="libs/jquery/v1.12.4/jquery.min.js"></script>
 <script src="libs/jquery.base64/jquery.base64.js"></script>
@@ -32,22 +31,7 @@
 
 <script>
     $(function () {
-      //我的消息
-      $('.myMessage').on('click',function () {
-        var p = {
-          "userId": 5
-        };
-        $.ajax({
-          url: "/messageComment.json",
-          type: "post",
-          data: {
-            "p": JSON.stringify(p)
-          },
-          success: function (results) {
-            console.log(results);
-          }
-        })
-      });
+
 
         $('.submit').on('click', function () {
             var name = $('.name-ipt').val();
@@ -58,7 +42,7 @@
             };
             var dataBase64=encodeBase64(JSON.stringify(data));//eyJ1c2VybmFtZSI6InF6cyIsInVzZXJwd2QiOiIxMjMifQ==
             $.ajax({
-                url: "/login",
+                url: "/login.json",
                 type: 'post',
                 data: {
                     'p': dataBase64

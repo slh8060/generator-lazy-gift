@@ -22,6 +22,9 @@
 <hr/>
 <button class="comment">评论</button>
 <button class="commentList">评论列表</button>
+<hr/>
+<button class="myMessageComment">我的评论消息</button>
+
 
 
 
@@ -34,6 +37,23 @@
 <script>
 
   $(function () {
+
+    //我的评论消息
+    $('.myMessageComment').on('click',function () {
+      var p = {
+         "userId": 11
+      };
+      $.ajax({
+        url: "/myMessageComment.json",
+        type: "post",
+        data: {
+          "p": JSON.stringify(p)
+        },
+        success: function (results) {
+          console.log(results);
+        }
+      })
+    });
 
 
     //发布

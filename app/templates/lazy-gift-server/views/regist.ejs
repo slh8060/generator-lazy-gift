@@ -36,7 +36,7 @@
             };
             var dataBase64 = encodeBase64(JSON.stringify(data));
             $.ajax({
-                url:"/regist",
+                url:"/regist.json",
                 type:"post",
                 data:{
                     "p":dataBase64
@@ -44,7 +44,7 @@
                 success:function (results) {
                     if (results.code == 200){
                         alert('注册成功');
-                        location.href = "/login";
+                        location.href = "/login.json";
                     } else {
                         alert(results.errorMsg);
                     }

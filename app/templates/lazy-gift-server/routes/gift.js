@@ -5,7 +5,6 @@ const mysql = require('mysql');
 const dbConfig = require('../db/dbConfig');
 const giftSQL = require('../db/giftSQL');
 const userSQL = require('../db/userSQL');
-const commentSQL = require('../db/commentSQL');
 
 //导入 util
 const DbUtil = require('../utils/DbUtil');
@@ -158,6 +157,7 @@ router.post('/detail.json', function (req, res) {
   // })
 });
 
+
 //推荐
 router.post('/recommend.json', function (req, res) {
   let param = req.p,//JSON.parse(req.body.p);
@@ -268,8 +268,6 @@ router.post('/recommend.json', function (req, res) {
   // });
 });
 
-
-
 //发布
 router.post('/publish.json', function (req, res) {
   let param = req.p;//JSON.parse(req.body.p);
@@ -291,7 +289,6 @@ router.post('/publish.json', function (req, res) {
   });
   dbUtil.release();
 });
-
 
 //赞\不赞
 router.post('/approve.json', function (req, res) {
@@ -441,4 +438,6 @@ router.post('/collectList.json', function (req, res) {
 
 
 });
+
+
 module.exports = router;

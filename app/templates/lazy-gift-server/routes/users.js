@@ -4,25 +4,31 @@ const router = express.Router();
 const mysql = require('mysql');
 const dbConfig = require('../db/dbConfig');
 const userSQL = require('../db/userSQL');
+const giftSQL = require('../db/giftSQL');
+const commentSQL = require('../db/commentSQL');
 
 //导入 util
 const DbUtil = require('../utils/DbUtil');
 const routerMiddle = require('../utils/RouterUtil').routerMiddle();
+const giftUtil = require('../utils/GiftUtil');
+const commonUtil = require('../utils/CommonUtil');
 
 const pool = mysql.createPool(dbConfig.mysql);
 
 let dbUtil = new DbUtil();
 
+router.use(routerMiddle);
 
 
-router.get('/login', function (req, res, next) {
+router.get('/login.json', function (req, res, next) {
   res.render('login')
-  //res.send('login');
 });
 
-router.post('/login', function (req, res, next) {
+router.post('/login.json', function (req, res, next) {
   let paramStr = new Buffer(req.body.p, 'base64').toString();//Base64解码,结果为：{"username":"qzsang","password":"123456"}
+
   let param = JSON.parse(paramStr);//Json 字符串转为对象
+
   let userName = param.username;
   let userPwd = param.userpwd;
   let results = {};
@@ -53,7 +59,6 @@ router.post('/login', function (req, res, next) {
         }
 
         res.send(results);
-        console.log()
         connection.release(); // 释放连接
 
       });
@@ -61,17 +66,16 @@ router.post('/login', function (req, res, next) {
   }
 });
 
-router.get('/regist', function (req, res, next) {
+router.get('/regist.json', function (req, res, next) {
   res.render('regist');
 });
 
-router.post('/regist', function (req, res) {
-  let paramStr = new Buffer(req.body.p, 'base64').toString();//Base64解码,结果为：{"username":"qzsang","password":"123456"}
+router.post('/regist.json', function (req, res) {
+  let paramStr = new Buffer(req.p, 'base64').toString();//Base64解码,结果为：{"username":"qzsang","password":"123456"}
   let param = JSON.parse(paramStr);//Json 字符串转为对象
   let name = param.username;
   let pwd = param.userpwd;
   let results = {};
-  console.log('param:' + paramStr);
   pool.getConnection(function (err, connection) {
     connection.query(userSQL.selectUserOne, name, function (err, result) {
       if (result.length != 0) { //用户名已存在
@@ -98,27 +102,60 @@ router.post('/regist', function (req, res) {
   })
 });
 
-
-router.post('/messageComment.json', function (req, res) {
+router.post('/myMessageComment.json', function (req, res) {
   let param = req.p,
     userId = param.userId,
-    results = {};
+    results = {}, detailId;
   dbUtil.query(userSQL.selectMyMessage, userId, function (result) {
-    results.result = [];
+    results.userId = userId;
+    results.message = result;
     var callback = new commonUtil.AsyncCallback(result.length, function () {
       res.send(results);
+
     });
-    console.log()
     result.forEach(function (item, index) {
-      if (item.target_able_id == 1) {
-        console.log(1111);
-        dbUtil.query(userSQL.selectMessageComment, [item.detail_id, userId], function (result) {
-          results.result.push(result);
+      if (result[index].target_table_name == "message_comment"){
+        dbUtil.query(userSQL.selectMessageComment, [result[index].target_table_id], function (result) {
+          results.message[index] = result[0];
+          detailId = result[0].detail_id;
+          let parentId = result[0].parent_id,
+            rootId = result[0].root_id;
+
+          dbUtil.query(giftSQL.selectDetailOne, result[0].detail_id, function (result) {
+            results.message[index].detail = result[0];
+
+            let now = new Date();  //getTime()  获取的是毫秒数
+            let publishDate = result[0].date;
+            let differ = (now - publishDate)/1000;
+            results.message[index].detail.date = commonUtil.getTime(differ,publishDate);
+
+            results.message[index].detail.items = [];
+
+            giftUtil.getDetailItem(detailId, function (items) {
+              results.message[index].detail.items = items;
+
+
+              if (parentId != rootId){
+                dbUtil.query(commentSQL.selectCommentOne, parentId, function (result) {
+                  results.message[index].lastMessage = result[0];
+                  callback.exect();
+
+                })
+              } else {
+                callback.exect();
+              }
+
+
+            });
+
+          });  //获取详情
+
+
         });
+
       }
     });
 
-    callback.exect();
 
   })
 });
