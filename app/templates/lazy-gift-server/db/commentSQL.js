@@ -11,6 +11,8 @@ let CommentSQL = {
 
   insertMyMessage: 'INSERT INTO my_message(user_id,target_table_id,target_table_name) VALUES(?,?,?)',
 
+  selectCommentOne: 'SELECT a.*,b.name AS owner_user_name,b.header_url AS owner_user_header_url,c.`name` AS target_user_name,c.header_url AS target_user_header_url FROM `comment` AS a INNER JOIN `user` AS b ON a.owner_user_id=b.id INNER JOIN `user` AS c ON a.target_user_id=c.id WHERE a.id=?'
+
 };
 
 module.exports = CommentSQL;
