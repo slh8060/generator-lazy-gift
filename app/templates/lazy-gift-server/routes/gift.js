@@ -50,37 +50,16 @@ router.post('/detail.json', function (req, res) {
     giftUtil.getDetailItem(detailId, function (items) {
       results.result.items = items;
 
-      dbUtil.query(commentSQL.selectComment,detailId,function (result) {  //评论回复查询
-        results.result.comment = result;
-        var callback = new AsyncCallback(result.length, function () {
-          if (typeof userId != "undefined") {
-            giftUtil.getOneIsApprove([detailId, userId], function (is_approve) {
-              results.result.is_approve = is_approve;
-              res.send(results);
-            });
-          } else {
-            results.result.is_approve = 0;
-            res.send(results);
-          }
+      if (typeof userId != "undefined") {
+        giftUtil.getOneIsApprove([detailId, userId], function (is_approve) {
+          results.result.is_approve = is_approve;
+          res.send(results);
         });
+      } else {
+        results.result.is_approve = 0;
+        res.send(results);
+      }
 
-        result.forEach(function (item,index) {
-          dbUtil.query(commentSQL.selectReply,[detailId,item.id],function (result) {
-            if (result.length != 0){
-              results.result.comment[index].reply = result;
-            }
-
-            callback.exect();
-
-
-
-
-          });
-
-        });
-
-
-      });
 
     });
 
@@ -205,7 +184,7 @@ router.post('/recommend.json', function (req, res) {
       let now = new Date();  //getTime()  获取的是毫秒数
 
 
-      var callback = new AsyncCallback(result.length, function () {
+      var callback = new commonUtil.AsyncCallback(result.length, function () {
         res.send(results);
       });
       for (let i = 0; i < result.length; i++) {
@@ -289,23 +268,7 @@ router.post('/recommend.json', function (req, res) {
   // });
 });
 
-class AsyncCallback {
-  constructor(count, callback) {
-    this.count = count;
-    this.realCallback = callback;
-    if (count == 0) {
-      callback();
-    }
-  }
 
-
-  exect() {
-    this.count--;
-    if (this.count == 0) {
-      this.realCallback();
-    }
-  }
-}
 
 //发布
 router.post('/publish.json', function (req, res) {
@@ -315,7 +278,7 @@ router.post('/publish.json', function (req, res) {
   dbUtil.query(userSQL.selectUserOne, param.uname, function (result) {
     dbUtil.query(giftSQL.insertDetailOne, [result[0].id, param.title, new Date()], function (result) {
       results.detailId = result.insertId;
-      var callback = new AsyncCallback(items.length, function () {
+      var callback = new commonUtil.AsyncCallback(items.length, function () {
         res.send(results);
       });
       for (let i = 0; i < items.length; i++) {
@@ -418,7 +381,7 @@ router.post('/collectList.json', function (req, res) {
   dbUtil.query(giftSQL.selectCollectAll, userId, function (result) {
     results.result = [];
     if (result.length != 0) {
-      var callback = new AsyncCallback(result.length, function () {
+      var callback = new commonUtil.AsyncCallback(result.length, function () {
         res.send(results);
       });
       for (let i = 0; i < result.length; i++) {

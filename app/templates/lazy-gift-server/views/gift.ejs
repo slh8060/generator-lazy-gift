@@ -19,7 +19,11 @@
 <button class="interest">👍／不👍</button>
 <button class="collect">收藏</button>
 <button class="collectList">收藏列表</button>
+<hr/>
 <button class="comment">评论</button>
+<button class="commentList">评论列表</button>
+
+
 
 
 
@@ -30,6 +34,7 @@
 <script>
 
   $(function () {
+
 
     //发布
     $('.insertOneBtn').on('click', function () {
@@ -71,7 +76,7 @@
     //详情
     $('.getInfoBtn').on('click', function () {
       var p = {
-        "detailId": 102,
+        "detailId": 107,
        // "userId": 5
       };
       $.ajax({
@@ -165,14 +170,32 @@
     //评论
     $('.comment').on('click',function () {
       var p = {
-        "ownerUserId": 4,
-        "detailId": 102,
-        "content": "拿手机开发哈卡",
-        //"targetUserId": 7,
-        "parentId": 5
+        "detailId": 107,
+        "ownerUserId": 7,
+        "targetUserId": 11,
+        "parentId": 35,
+        "rootId": 35,
+        "content": "没错",
       };
       $.ajax({
         url: '/comment.json',
+        type: "post",
+        data: {
+          "p": JSON.stringify(p)
+        },
+        success: function (data) {
+          console.log(data);
+        }
+      })
+    });
+
+    //评论列表
+    $('.commentList').on('click',function () {
+      var p = {
+        "detailId": 107
+      };
+      $.ajax({
+        url: '/commentList.json',
         type: "post",
         data: {
           "p": JSON.stringify(p)

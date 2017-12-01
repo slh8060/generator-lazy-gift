@@ -28,6 +28,8 @@ let GiftSQL = {
 
   deleteCollectone: 'DELETE FROM collect WHERE user_id=? AND detail_id=?',
 
+
+
 };
 
 module.exports = GiftSQL;

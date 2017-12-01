@@ -20,13 +20,34 @@
         <button class="submit" type="submit">submit</button>
         <button type="reset">reset</button>
     </div>
+
+
 </form>
+
+<button class="myMessage">我的消息</button>
+
 <script src="libs/jquery/v1.12.4/jquery.min.js"></script>
 <script src="libs/jquery.base64/jquery.base64.js"></script>
 <script src="src/js/common.js"></script>
 
 <script>
     $(function () {
+      //我的消息
+      $('.myMessage').on('click',function () {
+        var p = {
+          "userId": 5
+        };
+        $.ajax({
+          url: "/messageComment.json",
+          type: "post",
+          data: {
+            "p": JSON.stringify(p)
+          },
+          success: function (results) {
+            console.log(results);
+          }
+        })
+      });
 
         $('.submit').on('click', function () {
             var name = $('.name-ipt').val();
