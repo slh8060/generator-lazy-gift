@@ -65,7 +65,6 @@ router.post('/comment.json', function (req, res) {
   let callback = new commonUtil.AsyncCallback(1, function () {
     dbUtil.query(commentSQL.insertMessageComment, commentId, function (result) {
       let messageCommentId = result.insertId;
-      console.log(commentId);
 
       dbUtil.query(commentSQL.insertMyMessage, [targetUserId, messageCommentId, targetTableName], function (result) {
         results.success = true;
@@ -80,13 +79,14 @@ router.post('/comment.json', function (req, res) {
   if (typeof parentId == "undefined") {  //评论
     dbUtil.query(commentSQL.insertComment, [detailId, ownerUserId, targetUserId, content], function (result) {
       commentId = result.insertId;
-      console.log(result);
+      results.rootId = result.insertId;
       callback.exect();
 
     });
   } else {  //回复
     dbUtil.query(commentSQL.insertCommentReply, [detailId, ownerUserId, targetUserId, parentId, rootId, content], function (result) {
       commentId = result.insertId;
+      results.rootId = rootId;
       callback.exect();
     })
 
@@ -131,7 +131,5 @@ router.post('/comment.json', function (req, res) {
 
 });
 
-
-//详情
 
 module.exports = router;
