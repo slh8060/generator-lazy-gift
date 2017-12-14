@@ -38,18 +38,23 @@
             var pwd = $('.pwd-ipt').val();
             var data = {
                 "username": name,
-                "userpwd": pwd
+                "userpwd": pwd,
             };
-            var dataBase64=encodeBase64(JSON.stringify(data));//eyJ1c2VybmFtZSI6InF6cyIsInVzZXJwd2QiOiIxMjMifQ==
+       //     var dataBase64=encodeBase64(JSON.stringify(data));//eyJ1c2VybmFtZSI6InF6cyIsInVzZXJwd2QiOiIxMjMifQ==
             $.ajax({
                 url: "/login.json",
                 type: 'post',
                 data: {
-                    'p': dataBase64
+                  'p':JSON.stringify(data)
+                   // 'p': dataBase64
                 },
                 success: function (results) {
                     if (results.code == 200) {
+                      var cookie = new Cookie(name,results.userToken);
+                      cookie.setMaxAge;
+
                         alert('登录成功,'+results.data);
+
                     } else {
                         alert(results.errorMsg);
                     }

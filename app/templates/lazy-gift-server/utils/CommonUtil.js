@@ -1,3 +1,4 @@
+//获取时间
 function getTime(differ,publishDate) {
   let time = "";
   if (differ <= 5 * 60 ) {    //5分钟以内
@@ -20,6 +21,7 @@ function getTime(differ,publishDate) {
   return time;
 }
 
+//时间格式化
 function timeFormat(timeStamp) {
   //return new Date(parseInt(timeStamp) * 1000).toLocaleString();
   let time = new Date(timeStamp);
@@ -34,11 +36,12 @@ function timeFormat(timeStamp) {
   }
 }
 
-
+//单数字日期处理
 function add0(m) {
   return m < 10 ? '0' + m : m
 }
 
+//异步处理
 class AsyncCallback {
   constructor(count, callback) {
     this.count = count;
@@ -55,7 +58,28 @@ class AsyncCallback {
   }
 }
 
+//生成token
+function randomWord(randomFlag, min, max){
+  var str = "",
+    range = min,
+    arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+
+  // 随机产生
+  if(randomFlag){
+    range = Math.round(Math.random() * (max-min)) + min;
+  }
+  for(var i=0; i<range; i++){
+    pos = Math.round(Math.random() * (arr.length-1));
+    str += arr[pos];
+  }
+  return str;
+}
+
+randomWord(false, 43);
+
+
 module.exports = {
-  getTime: getTime,
-  AsyncCallback: AsyncCallback
+  getTime: getTime,   //获取时间
+  AsyncCallback: AsyncCallback,  //异步处理
+  randomWord: randomWord   //生成随机数
 };

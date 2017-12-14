@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const cookie = require('cookie-parser');
+
 //导入mysql模块
 const mysql = require('mysql');
 const dbConfig = require('../db/dbConfig');
+
 const userSQL = require('../db/userSQL');
 const giftSQL = require('../db/giftSQL');
 const commentSQL = require('../db/commentSQL');
@@ -24,14 +27,21 @@ router.get('/login.json', function (req, res, next) {
   res.render('login')
 });
 
-router.post('/login.json', function (req, res, next) {
-  let paramStr = new Buffer(req.body.p, 'base64').toString();//Base64解码,结果为：{"username":"qzsang","password":"123456"}
 
-  let param = JSON.parse(paramStr);//Json 字符串转为对象
+router.post('/login.json', function (req, res, next) {
+  //let paramStr = new Buffer(req.body.p, 'base64').toString();//Base64解码,结果为：{"username":"qzsang","password":"123456"}
+  // let param = JSON.parse(paramStr);//Json 字符串转为对象
+  let param = req.p;
 
   let userName = param.username;
   let userPwd = param.userpwd;
+  let userToken = req.cookies.user_session || req.get('user_token');
   let results = {};
+
+  let cookie = req.cookies;
+  console.log('---cookie---',cookie);
+  console.log('11111', userToken);
+
 
   //缺少参数
   if (userName == undefined || userPwd == undefined || userName == "" || userPwd == "") {
@@ -41,14 +51,26 @@ router.post('/login.json', function (req, res, next) {
   } else {
     pool.getConnection(function (err, connection) {
       connection.query(userSQL.selectUserOne, userName, function (err, result) {
+        let userId = result[0].id;
         if (result.length != 0) {
           if (result[0].pwd == userPwd) {
             results.code = 200;
-            data = {
-              "username": userName,
-              "userid": result[0].id
-            };
-            results.data = new Buffer(JSON.stringify(data)).toString('base64');
+            let token = commonUtil.randomWord(false, 43);
+            res.cookie('user_session', token, { expires: new Date(Date.now() + 900000), httpOnly: true });
+
+            if (typeof userToken == "undefined") {
+            //  let token = commonUtil.randomWord(false, 43);
+
+              connection.query(userSQL.insertUserTokenOne, [token, 1, userId],function (err,result) {
+                data = {
+                  "username": userName,
+                  "userid": userId,
+                  "userToken": token
+                };
+                results.data = new Buffer(JSON.stringify(data)).toString('base64');
+              });
+
+            }
           } else {
             results.code = 4;
             results.errorMsg = "用户名或密码错误";
@@ -114,7 +136,7 @@ router.post('/myMessageComment.json', function (req, res) {
 
     });
     result.forEach(function (item, index) {
-      if (result[index].target_table_name == "message_comment"){
+      if (result[index].target_table_name == "message_comment") {
         dbUtil.query(userSQL.selectMessageComment, [result[index].target_table_id], function (result) {
           results.message[index] = result[0];
           detailId = result[0].detail_id;
@@ -126,8 +148,8 @@ router.post('/myMessageComment.json', function (req, res) {
 
             let now = new Date();  //getTime()  获取的是毫秒数
             let publishDate = result[0].date;
-            let differ = (now - publishDate)/1000;
-            results.message[index].detail.date = commonUtil.getTime(differ,publishDate);
+            let differ = (now - publishDate) / 1000;
+            results.message[index].detail.date = commonUtil.getTime(differ, publishDate);
 
             results.message[index].detail.items = [];
 
@@ -135,7 +157,7 @@ router.post('/myMessageComment.json', function (req, res) {
               results.message[index].detail.items = items;
 
 
-              if (parentId != rootId){
+              if (parentId != rootId) {
                 dbUtil.query(commentSQL.selectCommentOne, parentId, function (result) {
                   results.message[index].lastMessage = result[0];
                   callback.exect();

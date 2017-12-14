@@ -183,7 +183,6 @@ router.post('/recommend.json', function (req, res) {
 
       let now = new Date();  //getTime()  获取的是毫秒数
 
-
       var callback = new commonUtil.AsyncCallback(result.length, function () {
         res.send(results);
       });
@@ -343,7 +342,7 @@ router.post('/collect.json', function (req, res) {
   let param = JSON.parse(req.body.p),
     userId = param.userId,
     detailId = param.detail_id,
-    isCollect = param.is_collect
+    isCollect = param.is_collect;
   results = {};
 
   //收藏
